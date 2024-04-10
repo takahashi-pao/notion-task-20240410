@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>title</title>
+    <style>
+        .display_flex {
+            display: flex;
+        }
+
+        .display_none {
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+    </div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" 
+        width="24" height="24" id="add_btn">
+        <path fill="none" d="M0 0h24v24H0z"/>
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+    </svg>
+    <input type="button" id="post_btn" role="button" value="送信"></div>
+    
+<!-- script---------------------------------------------------------- -->
+    <script>
+        const url = 'https://notion-task-api-20240410.takahashi-masatoshi-0713.workers.dev/api/post';
+        let container_elem = document.getElementById('container')
+        let add_btn = document.getElementById('add_btn')
+        let delete_btn = document.querySelector('delete_btn')
+        let post_btn = document.getElementById('post_btn')
+
+        document.addEventListener("DOMContentLoaded", function() {
+            insertInputArea()
+            handleDeleteBtnDisplay()
+        });
+
+        add_btn.addEventListener("click", () => {
+            insertInputArea()
+        })
+
+        post_btn.addEventListener("click", async() => {
+            try {
+                await submitData()
+            }catch(e){
+                alert(e)
+            }            
+
+            window.alert('completed')
+            window.close()
+        })
+
+        function insertInputArea(){
+            let uuid = generateUUID()
+
+            let input_area_html = `        <div class="input_area display_flex" id="${uuid}">
+                <input type="text" class="title" jsname="YPqjbf" 
+                    autocomplete="on" tabindex="0" aria-label="選択肢の値" 
+                    placeholder="name" dir="ltr" data-initial-value="name">
+                <input type="date" class="due" jsname="YPqjbf" 
+                    autocomplete="on" tabindex="0" aria-label="選択肢の値" 
+                    placeholder="due" dir="ltr" data-initial-value="">
+                <div role="button" class="delete_btn" onclick="removeInputArea('${uuid}')"
+                    jscontroller="VXdfxd" jsaction="click:cOuCgd; mousedown:UX7yZ; mouseup:lbsD7e; mouseenter:tfO1Yc; mouseleave:JywGue;touchstart:p6p2H; touchmove:FwuNnf; touchend:yfqBxc(preventDefault=true); touchcancel:JMtRjd;focus:AHmuwe; blur:O22p3e; contextmenu:mg9Pef;" 
+                    jsshadow="" jsname="nUV0Pd" aria-label="選択肢を削除" 
+                    tabindex="0" data-tooltip="削除"
+                    data-tooltip-vertical-offset="-12" 
+                    data-tooltip-horizontal-offset="0">
+                    <span jsslot="" class="XuQwKc">
+                    <span class="GmuOkf">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
+                        viewBox="0 0 24 24">
+                        <path fill="#5f6368" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z">                    </path>
+                        <path d="M0 0h24v24H0z" fill="none"></path></svg></span></span>
+                </div>      
+                
+            </div>`
+
+            let elem = document.createElement("div")
+            elem.innerHTML = input_area_html
+            container_elem.appendChild(elem)
+
+            handleDeleteBtnDisplay()
+        }
+
+        function removeInputArea(id){
+            let element = document.getElementById(id);
+            // 要素が存在するか確認
+            if (element) {
+                // 要素を削除
+                element.parentNode.removeChild(element);
+            } else {
+                console.log("要素が見つかりませんでした。");
+            }
+            handleDeleteBtnDisplay()
+        }
+
+        function checkInputAreaLength(){
+            return container_elem.querySelectorAll(".input_area").length
+        }
+
+        function handleDeleteBtnDisplay(){
+            if (checkInputAreaLength() === 1) {
+                container_elem.querySelector(".delete_btn").classList.add('display_none');
+            } else {
+                container_elem.querySelector(".delete_btn").classList.remove('display_none');
+            }
+        }
+
+        async function submitData(){
+            let input_content = document.querySelectorAll('.input_area')
+            
+            try {
+                input_content.forEach(content => {
+                let title = content.querySelector('.title').value
+                let due = content.querySelector('.due').value
+
+                const data = {
+                    title: title,
+                    due: due
+                };
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('There was a problem with your fetch operation: ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                    // レスポンスを処理する
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+                
+            })
+            }catch(e){
+                alert(`エラーが発生しました: ${e}`)
+            }
+
+        }
+
+        function generateUUID() {
+            var cryptoObj = window.crypto || window.msCrypto; // for IE11
+            if (cryptoObj) {
+                var array = new Uint32Array(4);
+                cryptoObj.getRandomValues(array);
+                return (
+                    array[0].toString(16) +
+                    array[1].toString(16) +
+                    '-' +
+                    array[2].toString(16) +
+                    '-' +
+                    array[3].toString(16)
+                );
+            } else {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    var r = (Math.random() * 16) | 0,
+                        v = c === 'x' ? r : (r & 0x3) | 0x8;
+                    return v.toString(16);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
